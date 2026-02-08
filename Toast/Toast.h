@@ -11,8 +11,12 @@
 #endif // !TOAST_TIP
 
 #ifndef TOAST_TIP_P
-#define TOAST_TIP_P(text, parent) Toast::ShowTip(text, parent)
+#define TOAST_TIP_P(text, type,parent) Toast::ShowTip(text, type, parent)
 #endif // !TOAST_TIP_P
+
+#ifndef TOAST_TIP_T
+#define TOAST_TIP_T(text, type) Toast::ShowTip(text, type)
+#endif // !TOAST_TIP_T
 
 class TOAST_EXPORT Toast : public QWidget {
     Q_OBJECT
