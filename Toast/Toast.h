@@ -3,6 +3,7 @@
 #include "toast_global.h"
 
 #include <QReadWriteLock>
+#include <QMessageBox>
 #include <QWidget>
 
 #ifndef TOAST_TIP
@@ -29,5 +30,5 @@ public:
      * @brief 静态调用
      * @param text 文字内容
      */
-    static void ShowTip(const QString& text, QWidget* parent = nullptr);
+    static void ShowTip(const QString& text, QMessageBox::Icon type= QMessageBox::Information, QWidget* parent = nullptr);
 };

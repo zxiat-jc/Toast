@@ -2,6 +2,8 @@
 
 #include "Toast.h"
 
+#include <QMessageBox>
+
 class QReadWriteLock;
 class QWidget;
 namespace Ui {
@@ -26,9 +28,11 @@ public:
      * @brief 显示提示
      * @param text 提示内容
      */
-    static void ShowTip(const QString& text, QWidget* parent);
+    static void ShowTip(const QString& text, QMessageBox::Icon type, QWidget* parent);
 
 protected:
+    void setType(QMessageBox::Icon type);
+
     virtual void paintEvent(QPaintEvent* event);
 
     static QList<QWidget*>& Widgets();

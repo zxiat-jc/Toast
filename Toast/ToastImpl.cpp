@@ -19,10 +19,32 @@ ToastImpl::ToastImpl(QWidget* parent)
     // 背景透明
     setAttribute(Qt::WA_TranslucentBackground, true);
     this->setAttribute(Qt::WA_DeleteOnClose);
+    setType(QMessageBox::Information);
+
 }
 
 ToastImpl::~ToastImpl()
 {
+}
+
+void ToastImpl::setType(QMessageBox::Icon type)
+{
+    QString style;
+    switch (type) {
+    case QMessageBox::Information:
+        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #2196F3; padding: 6px 12px; border-radius: 4px; }");
+        break;
+    case QMessageBox::Warning:
+        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #FF9800; padding: 6px 12px; border-radius: 4px; }");
+        break;
+    case QMessageBox::Critical:
+        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #F44336; padding: 6px 12px; border-radius: 4px; }");
+        break;
+    default:
+        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #2196F3; padding: 6px 12px; border-radius: 4px; }");
+        break;
+    }
+    ui->label->setStyleSheet(style);
 }
 
 void ToastImpl::setText(const QString& text)
@@ -60,9 +82,9 @@ void ToastImpl::showAnimation(int timeout /*= 2000*/)
     });
 }
 
-void ToastImpl::ShowTip(const QString& text, QWidget* parent)
+void ToastImpl::ShowTip(const QString& text, QMessageBox::Icon type,QWidget* parent)
 {
-    QTimer::singleShot(0, QCoreApplication::instance(), [text, parent]() {
+    QTimer::singleShot(0, QCoreApplication::instance(), [text, type,parent]() {
         {
             QReadLocker locker(&Lock());
             // 存在的全部升高宽度+20px
@@ -77,6 +99,7 @@ void ToastImpl::ShowTip(const QString& text, QWidget* parent)
         }
         // 置顶
         toast->setWindowFlags(toast->windowFlags() | Qt::WindowStaysOnTopHint);
+        toast->setType(type);
         toast->setText(text);
         // 设置完文本后调整下大小
         toast->adjustSize();
