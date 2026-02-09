@@ -19,33 +19,12 @@ ToastImpl::ToastImpl(QWidget* parent)
     // 背景透明
     setAttribute(Qt::WA_TranslucentBackground, true);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    setType(QMessageBox::Information);
-
 }
 
 ToastImpl::~ToastImpl()
 {
 }
 
-void ToastImpl::setType(QMessageBox::Icon type)
-{
-    QString style;
-    switch (type) {
-    case QMessageBox::Information:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #2196F3; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    case QMessageBox::Warning:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #FF9800; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    case QMessageBox::Critical:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #F44336; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    default:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #2196F3; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    }
-    ui->label->setStyleSheet(style);
-}
 
 void ToastImpl::setText(const QString& text)
 {
@@ -99,8 +78,22 @@ void ToastImpl::ShowTip(const QString& text, QMessageBox::Icon type,QWidget* par
         }
         // 置顶
         toast->setWindowFlags(toast->windowFlags() | Qt::WindowStaysOnTopHint);
-        toast->setType(type);
-        toast->setText(text);
+        QString prefix;//前缀
+        switch (type) {
+        case QMessageBox::Information:
+            prefix = "消息:";
+            break;
+        case QMessageBox::Warning:
+            prefix = "警告:";
+            break;
+        case QMessageBox::Critical:
+            prefix = "严重错误:";
+            break;
+        default:
+            break;
+        }
+
+        toast->setText(prefix+text);
         // 设置完文本后调整下大小
         toast->adjustSize();
 
