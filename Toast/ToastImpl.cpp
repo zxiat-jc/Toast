@@ -6,6 +6,8 @@
 #include <QPropertyAnimation>
 #include <QScreen>
 #include <QTimer>
+#include <QStyle>
+#include <QBuffer>
 
 #include "ui_Toast.h"
 
@@ -19,36 +21,18 @@ ToastImpl::ToastImpl(QWidget* parent)
     // 背景透明
     setAttribute(Qt::WA_TranslucentBackground, true);
     this->setAttribute(Qt::WA_DeleteOnClose);
-    setType(QMessageBox::Information);
-
 }
 
 ToastImpl::~ToastImpl()
 {
 }
 
-void ToastImpl::setType(QMessageBox::Icon type)
-{
-    QString style;
-    switch (type) {
-    case QMessageBox::Information:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #2196F3; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    case QMessageBox::Warning:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #FF9800; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    case QMessageBox::Critical:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #F44336; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    default:
-        style = QStringLiteral("QLabel { color: #FFFFFF; background-color: #2196F3; padding: 6px 12px; border-radius: 4px; }");
-        break;
-    }
-    ui->label->setStyleSheet(style);
-}
 
 void ToastImpl::setText(const QString& text)
 {
+    ui->label->setTextFormat(Qt::RichText);
+    ui->label->setWordWrap(false);
+    ui->label->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
     ui->label->setText(text);
 }
 
@@ -99,10 +83,54 @@ void ToastImpl::ShowTip(const QString& text, QMessageBox::Icon type,QWidget* par
         }
         // 置顶
         toast->setWindowFlags(toast->windowFlags() | Qt::WindowStaysOnTopHint);
-        toast->setType(type);
-        toast->setText(text);
-        // 设置完文本后调整下大小
-        toast->adjustSize();
+
+         auto iconHtml = [type]() -> QString {
+            QStyle::StandardPixmap sp = QStyle::SP_MessageBoxInformation;
+            switch (type) {
+            case QMessageBox::Warning:
+                sp = QStyle::SP_MessageBoxWarning;
+                break;
+            case QMessageBox::Critical:
+                sp = QStyle::SP_MessageBoxCritical;
+                break;
+            default:
+                sp = QStyle::SP_MessageBoxInformation;
+                break;
+            }
+            QPixmap pixmap = qApp->style()->standardIcon(sp).pixmap(16, 16);
+            QByteArray bytes;
+            QBuffer buffer(&bytes);
+            buffer.open(QIODevice::WriteOnly);
+            pixmap.save(&buffer, "PNG");
+            return QString("<img src=\"data:image/png;base64,%1\"/>").arg(QString::fromLatin1(bytes.toBase64()));
+        };
+
+
+        QString prefix;//前缀
+        switch (type) {
+        case QMessageBox::Information:
+            prefix = "消息:";
+            break;
+        case QMessageBox::Warning:
+            prefix = "警告:";
+            break;
+        case QMessageBox::Critical:
+            prefix = "严重错误:";
+            break;
+        default:
+            break;
+        }
+
+       toast->setText(QString(
+            "<table cellspacing=\"0\" cellpadding=\"0\">"
+            "<tr>"
+            "<td style=\"vertical-align:middle; padding-right:6px;\">%1</td>"
+            "<td style=\"vertical-align:middle; color:#FFFFFF;\">%2%3</td>"
+            "</tr>"
+            "</table>")
+                .arg(iconHtml())
+                .arg(prefix)
+                .arg(text));
 
         if (parent == nullptr) {
             // 默认显示位于主屏的70%高度位置，依次叠加升高宽度+20px
