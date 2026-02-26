@@ -32,7 +32,7 @@ void ToastImpl::setText(const QString& text)
 {
     ui->label->setTextFormat(Qt::RichText);
     ui->label->setWordWrap(false);
-    ui->label->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
+    ui->label->setAlignment(Qt::AlignCenter);
     ui->label->setText(text);
 }
 
@@ -69,11 +69,20 @@ void ToastImpl::showAnimation(int timeout /*= 2000*/)
 void ToastImpl::ShowTip(const QString& text, QMessageBox::Icon type,QWidget* parent)
 {
     QTimer::singleShot(0, QCoreApplication::instance(), [text, type,parent]() {
+        auto calcTargetX = [parent](QWidget* widget) -> int {
+            if (parent == nullptr) {
+                QScreen* pScreen = QGuiApplication::primaryScreen();
+                return (pScreen->size().width() - widget->width()) / 2;
+            }
+            const QPoint parentTopLeft = parent->mapToGlobal(QPoint(0, 0));
+            return parentTopLeft.x() + (parent->width() - widget->width()) / 2;
+        };
+
         {
             QReadLocker locker(&Lock());
             // 存在的全部升高宽度+20px
             for (auto&& wid : Widgets()) {
-                wid->move(wid->x(), wid->y() - wid->height() - 10);
+                wid->move(calcTargetX(wid), wid->y() - wid->height() - 10);
             }
         }
         ToastImpl* toast = new ToastImpl();
@@ -131,14 +140,16 @@ void ToastImpl::ShowTip(const QString& text, QMessageBox::Icon type,QWidget* par
                 .arg(iconHtml())
                 .arg(prefix)
                 .arg(text));
+        toast->adjustSize();
 
         if (parent == nullptr) {
             // 默认显示位于主屏的70%高度位置，依次叠加升高宽度+20px
             QScreen* pScreen = QGuiApplication::primaryScreen();
-            toast->move((pScreen->size().width() - toast->width()) / 2, pScreen->size().height() * 7 / 10);
+            toast->move(calcTargetX(toast), pScreen->size().height() * 7 / 10);
         } else {
             // 显示在parent的正中间
-            toast->move(parent->x() + (parent->width() - toast->width()) / 2, parent->y() + (parent->height() - toast->height()) / 2);
+            const QPoint parentTopLeft = parent->mapToGlobal(QPoint(0, 0));
+            toast->move(calcTargetX(toast), parentTopLeft.y() + (parent->height() - toast->height()) / 2);
         }
         toast->showAnimation();
         qInfo() << text;
