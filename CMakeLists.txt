@@ -15,10 +15,18 @@ configure_package_config_file(
 	INSTALL_DESTINATION "${TOAST_INSTALL_CMAKEDIR}"
 )
 
-write_basic_package_version_file(
-	"${CMAKE_CURRENT_BINARY_DIR}/ToastConfigVersion.cmake"
-	VERSION "${PROJECT_VERSION}"
-	COMPATIBILITY SameMajorVersion
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/ToastConfigVersion.cmake"
+"set(PACKAGE_VERSION \"${PROJECT_VERSION}\")\n"
+"\n"
+"if(PACKAGE_FIND_VERSION_MAJOR STREQUAL \"${PROJECT_VERSION_MAJOR}\")\n"
+"  set(PACKAGE_VERSION_COMPATIBLE TRUE)\n"
+"else()\n"
+"  set(PACKAGE_VERSION_COMPATIBLE FALSE)\n"
+"endif()\n"
+"\n"
+"if(PACKAGE_FIND_VERSION STREQUAL PACKAGE_VERSION)\n"
+"  set(PACKAGE_VERSION_EXACT TRUE)\n"
+"endif()\n"
 )
 
 install(FILES
